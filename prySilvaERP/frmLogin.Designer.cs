@@ -36,7 +36,7 @@
             this.cmdAceptar = new System.Windows.Forms.Button();
             this.cmdCancelar = new System.Windows.Forms.Button();
             this.lblPerfil = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.cmbPerfil = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // lblUsuario
@@ -60,9 +60,10 @@
             // lblTitulo
             // 
             this.lblTitulo.AutoSize = true;
+            this.lblTitulo.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTitulo.Location = new System.Drawing.Point(22, 25);
             this.lblTitulo.Name = "lblTitulo";
-            this.lblTitulo.Size = new System.Drawing.Size(68, 13);
+            this.lblTitulo.Size = new System.Drawing.Size(90, 17);
             this.lblTitulo.TabIndex = 2;
             this.lblTitulo.Text = "Iniciar sesión";
             // 
@@ -101,6 +102,7 @@
             this.cmdCancelar.TabIndex = 6;
             this.cmdCancelar.Text = "Cancelar";
             this.cmdCancelar.UseVisualStyleBackColor = true;
+            this.cmdCancelar.Click += new System.EventHandler(this.cmdCancelar_Click);
             // 
             // lblPerfil
             // 
@@ -111,20 +113,20 @@
             this.lblPerfil.TabIndex = 7;
             this.lblPerfil.Text = "Perfil";
             // 
-            // comboBox1
+            // cmbPerfil
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(140, 122);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(100, 21);
-            this.comboBox1.TabIndex = 8;
+            this.cmbPerfil.FormattingEnabled = true;
+            this.cmbPerfil.Location = new System.Drawing.Point(140, 122);
+            this.cmbPerfil.Name = "cmbPerfil";
+            this.cmbPerfil.Size = new System.Drawing.Size(100, 21);
+            this.cmbPerfil.TabIndex = 8;
             // 
             // frmLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(299, 244);
-            this.Controls.Add(this.comboBox1);
+            this.Controls.Add(this.cmbPerfil);
             this.Controls.Add(this.lblPerfil);
             this.Controls.Add(this.cmdCancelar);
             this.Controls.Add(this.cmdAceptar);
@@ -136,6 +138,7 @@
             this.Name = "frmLogin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Login";
+            this.Load += new System.EventHandler(this.frmLogin_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -151,6 +154,6 @@
         private System.Windows.Forms.Button cmdAceptar;
         private System.Windows.Forms.Button cmdCancelar;
         private System.Windows.Forms.Label lblPerfil;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox cmbPerfil;
     }
 }
