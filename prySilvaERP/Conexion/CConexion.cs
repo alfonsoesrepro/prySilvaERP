@@ -72,13 +72,20 @@ namespace prySilvaERP.Conexion
         }
 
         /// <summary>
-        /// Registra un intento fallido de inicio de sesión en la tabla [Auditoria-sesion].
-        /// La tabla debe tener columnas: Id (Autonumeración), Usuario (Texto corto), Fecha_Hora (Fecha/Hora).
+        /// Registra un intento de inicio de sesión en la tabla [Auditoria-sesion].
+        /// Columnas esperadas en la tabla:
+        ///   Id (Autonumeración),
+        ///   Usuario (Texto corto),
+        ///   Fecha_Hora (Fecha/Hora),
+        ///   [Estado del Login] (Texto corto) -> "Exitoso" / "Fallido",
+        ///   [Opcion del sistema] (Texto corto) -> nombre del perfil o "-" si fallido.
         /// Requiere que la conexión `CNN` esté abierta.
         /// </summary>
         /// <param name="usuario">Nombre/identificador del usuario (puede estar vacío)</param>
-        /// <returns>true si el registro se grabó correctamente; false en caso contrario (ERROR queda con el mensaje)</returns>
-        public int GrabarIntentoFallido(string usuario)
+        /// <param name="estadoLogin">"Exitoso" o "Fallido"</param>
+        /// <param name="opcionSistema">Perfil al que ingresó el usuario o "-" si fallido</param>
+        /// <returns>número de filas insertadas (1 esperado) o 0 en caso de error</returns>
+        public int GrabarIntento(string usuario, string estadoLogin, string opcionSistema)
         {
             try
             {
@@ -88,13 +95,18 @@ namespace prySilvaERP.Conexion
                     return 0;
                 }
 
-                string sql = "INSERT INTO [Auditoria-sesion] (Usuario, Fecha_Hora) VALUES (?, ?)";
+                // Usamos nombres de columna entre corchetes por si contienen espacios o guiones
+                string sql = "INSERT INTO [Auditoria-sesion] (Usuario, Fecha_Hora, [Estado del Login], [Opcion del sistema]) VALUES (?, ?, ?, ?)";
                 using (OleDbCommand cmd = new OleDbCommand(sql, CNN))
                 {
-                    // Parametro 1: texto corto (ajusta la longitud si hace falta)
+                    // Parametro 1: Usuario (Texto corto)
                     cmd.Parameters.Add("@p1", OleDbType.VarChar, 255).Value = string.IsNullOrEmpty(usuario) ? "" : usuario;
-                    // Parametro 2: fecha/hora
+                    // Parametro 2: Fecha/Hora
                     cmd.Parameters.Add("@p2", OleDbType.Date).Value = DateTime.Now;
+                    // Parametro 3: Estado del Login (Texto corto)
+                    cmd.Parameters.Add("@p3", OleDbType.VarChar, 50).Value = string.IsNullOrEmpty(estadoLogin) ? "-" : estadoLogin;
+                    // Parametro 4: Opcion del sistema (Texto corto)
+                    cmd.Parameters.Add("@p4", OleDbType.VarChar, 255).Value = string.IsNullOrEmpty(opcionSistema) ? "-" : opcionSistema;
 
                     int filas = cmd.ExecuteNonQuery();
                     if (filas <= 0)

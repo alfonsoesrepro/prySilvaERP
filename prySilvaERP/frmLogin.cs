@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -9,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.OleDb;
 using prySilvaERP.Conexion;
+using System;
 
 namespace prySilvaERP
 {
@@ -48,7 +48,7 @@ namespace prySilvaERP
             if (!conexion.Conectar(connStr))
             {
                 string err = conexion.ObtenerError();
-                MessageBox.Show("Error al conectar a la base de datos: " + (string.IsNullOrWhiteSpace(err) ? "desconocido" : err), "Error", 
+                MessageBox.Show("Error al conectar a la base de datos: " + (string.IsNullOrWhiteSpace(err) ? "desconocido" : err), "Error",
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -66,8 +66,8 @@ namespace prySilvaERP
                     object result = cmd.ExecuteScalar();
                     if (result == null || result == DBNull.Value || !int.TryParse(result.ToString(), out idUsuario))
                     {
-                        // Credenciales incorrectas -> registrar intento fallido
-                        int filas = conexion.GrabarIntentoFallido(usuario);
+                        // Credenciales incorrectas -> registrar intento (Fallido)
+                        int filas = conexion.GrabarIntento(usuario, "Fallido", "-");
                         if (filas <= 0)
                         {
                             MessageBox.Show("No se pudo registrar intento en auditoría: " + conexion.ObtenerError(), "Error logging", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -93,7 +93,7 @@ namespace prySilvaERP
                 if (cmbPerfil.DataSource == null || cmbPerfil.SelectedValue == null)
                 {
                     // Registrar intento fallido por perfil inválido/ausente
-                    conexion.GrabarIntentoFallido(usuario);
+                    conexion.GrabarIntento(usuario, "Fallido", "-");
 
                     MessageBox.Show("Seleccione un perfil válido.", "Perfil no seleccionado",
                                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -103,9 +103,9 @@ namespace prySilvaERP
                 int idPerfil = 0;
                 if (!int.TryParse(cmbPerfil.SelectedValue.ToString(), out idPerfil))
                 {
-                    conexion.GrabarIntentoFallido(usuario);
+                    conexion.GrabarIntento(usuario, "Fallido", "-");
 
-                    MessageBox.Show("Perfil seleccionado no válido.", "Error", 
+                    MessageBox.Show("Perfil seleccionado no válido.", "Error",
                                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -122,7 +122,14 @@ namespace prySilvaERP
                     int relCount = 0;
                     if (relResult != null && int.TryParse(relResult.ToString(), out relCount) && relCount > 0)
                     {
-                        // Todo OK: abrir formulario principal y pasar datos
+                        // Todo OK: registrar intento exitoso y abrir formulario correspondiente
+                        int filasLog = conexion.GrabarIntento(usuario, "Exitoso", cmbPerfil.Text);
+                        if (filasLog <= 0)
+                        {
+                            // no bloqueamos el acceso por fallo de logging, pero informamos en desarrollo
+                            // MessageBox.Show("No se pudo registrar intento exitoso: " + conexion.ObtenerError(), "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+
                         intentos = 0;
 
                         // Si el perfil elegido es "RR.HH." abrimos frmRRHH, en caso contrario frmMain
@@ -148,7 +155,7 @@ namespace prySilvaERP
                     else
                     {
                         // Perfil no asignado -> registrar intento fallido
-                        conexion.GrabarIntentoFallido(usuario);
+                        conexion.GrabarIntento(usuario, "Fallido", "-");
 
                         MessageBox.Show("El perfil seleccionado no está asignado a este usuario.", "Acceso denegado",
                                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -169,12 +176,12 @@ namespace prySilvaERP
             catch (OleDbException ex)
             {
                 // Si falla por nombre de tabla/columnas, informar el error para facilitar corrección
-                MessageBox.Show("Error al consultar la base de datos: " + ex.Message, "Error", 
+                MessageBox.Show("Error al consultar la base de datos: " + ex.Message, "Error",
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ocurrió un error: " + ex.Message, "Error", 
+                MessageBox.Show("Ocurrió un error: " + ex.Message, "Error",
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -227,13 +234,11 @@ namespace prySilvaERP
             }
             catch (OleDbException ex)
             {
-                MessageBox.Show("Error al obtener perfiles: " + ex.Message, "Error", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Error al obtener perfiles: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ocurrió un error al cargar perfiles: " + ex.Message, "Error", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Ocurrió un error al cargar perfiles: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
