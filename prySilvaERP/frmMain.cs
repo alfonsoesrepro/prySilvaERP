@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Configuration;
 using prySilvaERP.Conexion;
-using System.Data.OleDb;
-using System;
 
 namespace prySilvaERP
 {
@@ -83,8 +81,7 @@ namespace prySilvaERP
 
             _timerFechaHora.Start();
 
-            // Cargar auditoría en dgvAuditoria
-            CargarAuditoria();
+            // Auditoría ahora se muestra en el formulario frmAuditoria
         }
 
         private void TimerFechaHora_Tick(object sender, EventArgs e)
@@ -99,48 +96,6 @@ namespace prySilvaERP
             lblHora.Text = DateTime.Now.ToString("HH:mm:ss");
         }
 
-        private void CargarAuditoria()
-        {
-            string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
-                             "|DataDirectory|\\Conexion\\Silva.accdb;Persist Security Info=True";
-
-            var conexion = new CConexion();
-            if (!conexion.Conectar(connStr))
-            {
-                // Si hay error de conexión, dejamos el grid vacío y mostramos estado
-                lblEstado.ForeColor = Color.Red;
-                lblEstado.Text = "Error al cargar auditoría: " + conexion.ObtenerError();
-                return;
-            }
-
-            try
-            {
-                string sql = "SELECT Id, Usuario, Fecha_Hora, [Estado del Login], [Opcion del sistema] FROM [Auditoria-sesion] ORDER BY Fecha_Hora DESC";
-                using (OleDbCommand cmd = new OleDbCommand(sql, conexion.CNN))
-                using (OleDbDataAdapter da = new OleDbDataAdapter(cmd))
-                {
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    dgvAuditoria.DataSource = dt;
-
-                    // Opcional: formatear columna Fecha_Hora si existe
-                    if (dgvAuditoria.Columns.Contains("Fecha_Hora"))
-                    {
-                        dgvAuditoria.Columns["Fecha_Hora"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                lblEstado.ForeColor = Color.Red;
-                lblEstado.Text = "Error al obtener auditoría: " + ex.Message;
-            }
-            finally
-            {
-                conexion.Desconectar();
-            }
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (_timerFechaHora != null)
@@ -152,6 +107,18 @@ namespace prySilvaERP
             }
 
             base.OnFormClosing(e);
+        }
+
+        private void consultarAuditoriaAdminToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmAuditoria x = new frmAuditoria();
+            x.ShowDialog();
+        }
+
+        private void rRHHToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmRRHH x = new frmRRHH();
+            x.ShowDialog();
         }
 
         private void cmdCerrarSesion_Click(object sender, EventArgs e)
