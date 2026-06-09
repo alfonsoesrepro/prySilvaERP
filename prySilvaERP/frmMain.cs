@@ -15,6 +15,7 @@ namespace prySilvaERP
     public partial class frmMain : Form
     {
         private Timer _timerFechaHora;
+        private bool _isRRHHUser = false;
 
         public frmMain()
         {
@@ -71,6 +72,57 @@ namespace prySilvaERP
             lblUsuario.Text = "Usuario: " + usuario;
             lblPerfil.Text = "Perfil: " + perfil;
 
+            // Determinar si el usuario tiene perfil RR.HH. o Administrador.
+            _isRRHHUser = false;
+            bool isAdmin = false;
+            if (!string.IsNullOrWhiteSpace(perfil))
+            {
+                // perfil puede ser una lista separada por comas
+                var tokens = perfil.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(t => t.Trim()).ToList();
+                foreach (var t in tokens)
+                {
+                    var normalized = t.Replace(".", string.Empty).Replace(" ", string.Empty);
+                    if (string.Equals(normalized, "RRHH", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _isRRHHUser = true;
+                    }
+                    if (string.Equals(t, "Administrador", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(normalized, "ADMIN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        isAdmin = true;
+                    }
+                }
+            }
+
+            // Si es administrador permitir todo; si es RR.HH solo permitir Sistema + RR.HH; si no, permitir solo Sistema
+            if (isAdmin)
+            {
+                sistemaToolStripMenuItem.Enabled = true;
+                consultarAuditoriaAdminToolStripMenuItem.Enabled = true;
+                rRHHToolStripMenuItem.Enabled = true;
+                finanzasToolStripMenuItem.Enabled = true;
+                usuarioToolStripMenuItem.Enabled = true;
+            }
+            else if (_isRRHHUser)
+            {
+                sistemaToolStripMenuItem.Enabled = true;
+                consultarAuditoriaAdminToolStripMenuItem.Enabled = false;
+                rRHHToolStripMenuItem.Enabled = true;
+                finanzasToolStripMenuItem.Enabled = false;
+                usuarioToolStripMenuItem.Enabled = false;
+            }
+            else
+            {
+                // Usuario normal: solo Sistema (y elementos que contenga Sistema)
+                sistemaToolStripMenuItem.Enabled = true;
+                consultarAuditoriaAdminToolStripMenuItem.Enabled = false;
+                rRHHToolStripMenuItem.Enabled = false;
+                finanzasToolStripMenuItem.Enabled = false;
+                usuarioToolStripMenuItem.Enabled = false;
+            }
+
             // Inicializar timer para actualizar fecha y hora
             _timerFechaHora = new Timer();
             _timerFechaHora.Interval = 1000; // 1 segundo
@@ -117,11 +169,29 @@ namespace prySilvaERP
 
         private void rRHHToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // Permitir acceso solo si el usuario tiene perfil RR.HH. o es administrador.
+            if (!(_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                  (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                MessageBox.Show("Acceso denegado. Esta opción solo está disponible para usuarios con perfil RR.HH.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             frmRRHH x = new frmRRHH();
             x.ShowDialog();
         }
 
         private void cmdCerrarSesion_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void acercaDeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cerrarSesiónToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
         }

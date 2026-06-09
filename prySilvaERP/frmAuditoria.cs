@@ -23,6 +23,7 @@ namespace prySilvaERP
 
         private void frmAuditoria_Load(object sender, EventArgs e)
         {
+            CheckDbStatus();
             CargarAuditoria();
         }
 
@@ -72,6 +73,29 @@ namespace prySilvaERP
         private void cmdAtras_Click_1(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void CheckDbStatus()
+        {
+            string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
+                             "|DataDirectory|\\Conexion\\Silva.accdb;Persist Security Info=True";
+
+            var conexion = new CConexion();
+            bool conectado = conexion.Conectar(connStr);
+
+            if (conectado)
+            {
+                lblEstado.ForeColor = Color.Green;
+                lblEstado.Text = "Conexión establecida correctamente.";
+            }
+            else
+            {
+                lblEstado.ForeColor = Color.Red;
+                string err = conexion.ObtenerError();
+                lblEstado.Text = "Error de conexión: " + (string.IsNullOrWhiteSpace(err) ? "desconocido." : err);
+            }
+
+            conexion.Desconectar();
         }
     }
 }

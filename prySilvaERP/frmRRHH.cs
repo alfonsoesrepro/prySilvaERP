@@ -17,11 +17,14 @@ namespace prySilvaERP
         public frmRRHH()
         {
             InitializeComponent();
+            this.Load += frmRRHH_Load;
         }
 
         private void frmRRHH_Load(object sender, EventArgs e)
         {
-            cmbRedes.SelectedIndex = 0;
+            CheckDbStatus();
+
+            cmbRedesR.SelectedIndex = 0;
 
             // Cargar localidades desde la tabla Localidades_cordoba2 y asignar DisplayMember / ValueMember
             string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
@@ -47,14 +50,14 @@ namespace prySilvaERP
 
                     if (dt.Rows.Count > 0)
                     {
-                        cmbLocalidad.DisplayMember = "Localidad";
-                        cmbLocalidad.ValueMember = "Id";
-                        cmbLocalidad.DataSource = dt;
+                        cmbLocalidadR.DisplayMember = "Localidad";
+                        cmbLocalidadR.ValueMember = "Id";
+                        cmbLocalidadR.DataSource = dt;
                     }
                     else
                     {
-                        cmbLocalidad.DataSource = null;
-                        cmbLocalidad.Items.Clear();
+                        cmbLocalidadR.DataSource = null;
+                        cmbLocalidadR.Items.Clear();
                     }
                 }
             }
@@ -95,14 +98,14 @@ namespace prySilvaERP
 
                     if (dt.Rows.Count > 0)
                     {
-                        cmbProvincia.DisplayMember = "Provincia";
-                        cmbProvincia.ValueMember = "Id";
-                        cmbProvincia.DataSource = dt;
+                        cmbProvinciaR.DisplayMember = "Provincia";
+                        cmbProvinciaR.ValueMember = "Id";
+                        cmbProvinciaR.DataSource = dt;
                     }
                     else
                     {
-                        cmbProvincia.DataSource = null;
-                        cmbProvincia.Items.Clear();
+                        cmbProvinciaR.DataSource = null;
+                        cmbProvinciaR.Items.Clear();
                     }
                 }
             }
@@ -120,6 +123,34 @@ namespace prySilvaERP
             {
                 conexion.Desconectar();
             }
+        }
+
+        private void cmdAtrás_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void CheckDbStatus()
+        {
+            string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
+                             "|DataDirectory|\\Conexion\\Silva.accdb;Persist Security Info=True";
+
+            var conexion = new CConexion();
+            bool conectado = conexion.Conectar(connStr);
+
+            if (conectado)
+            {
+                lblEstado.ForeColor = Color.Green;
+                lblEstado.Text = "Conexión establecida correctamente.";
+            }
+            else
+            {
+                lblEstado.ForeColor = Color.Red;
+                string err = conexion.ObtenerError();
+                lblEstado.Text = "Error de conexión: " + (string.IsNullOrWhiteSpace(err) ? "desconocido." : err);
+            }
+
+            conexion.Desconectar();
         }
     }
 }

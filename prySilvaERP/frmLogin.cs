@@ -89,89 +89,50 @@ namespace prySilvaERP
                     }
                 }
 
-                // 2) Verificar que se haya seleccionado un perfil
-                if (cmbPerfil.DataSource == null || cmbPerfil.SelectedValue == null)
+                // 2) Obtener los perfiles asignados al usuario desde la tabla de relación
+                string sqlGetPerfiles = "SELECT p.Id_perfil, p.Nombre FROM Perfil p INNER JOIN [Relacion-usuario-perfil] r ON p.Id_perfil = r.Id_perfil WHERE r.Id_usuario = ? ORDER BY p.Nombre";
+                DataTable dtPerfiles = new DataTable();
+                using (OleDbCommand cmdPerf = new OleDbCommand(sqlGetPerfiles, conexion.CNN))
+                using (OleDbDataAdapter da = new OleDbDataAdapter(cmdPerf))
                 {
-                    // Registrar intento fallido por perfil inválido/ausente
-                    conexion.GrabarIntento(usuario, "Fallido", "-");
-
-                    MessageBox.Show("Seleccione un perfil válido.", "Perfil no seleccionado",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    cmdPerf.Parameters.AddWithValue("@p1", idUsuario);
+                    da.Fill(dtPerfiles);
                 }
 
-                int idPerfil = 0;
-                if (!int.TryParse(cmbPerfil.SelectedValue.ToString(), out idPerfil))
+                // Si no hay perfiles, no bloqueamos el acceso; mostramos 'Sin perfil'
+                string perfilDisplay;
+                if (dtPerfiles.Rows.Count == 0)
                 {
-                    conexion.GrabarIntento(usuario, "Fallido", "-");
-
-                    MessageBox.Show("Perfil seleccionado no válido.", "Error",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    perfilDisplay = "Sin perfil";
                 }
-
-                // 3) Comprobar en la tabla de relación que el usuario tiene asignado ese perfil
-                // NOTE: Ajuste el nombre de la tabla si en la BD se llama distinto. Aquí se usa "Relacion-usuario-perfil".
-                string sqlCheckRelation = "SELECT COUNT(*) FROM [Relacion-usuario-perfil] WHERE Id_usuario = ? AND Id_perfil = ?";
-                using (OleDbCommand cmdRel = new OleDbCommand(sqlCheckRelation, conexion.CNN))
+                else
                 {
-                    cmdRel.Parameters.AddWithValue("@p1", idUsuario);
-                    cmdRel.Parameters.AddWithValue("@p2", idPerfil);
-
-                    object relResult = cmdRel.ExecuteScalar();
-                    int relCount = 0;
-                    if (relResult != null && int.TryParse(relResult.ToString(), out relCount) && relCount > 0)
+                    var nombres = new List<string>();
+                    foreach (DataRow row in dtPerfiles.Rows)
                     {
-                        // Todo OK: registrar intento exitoso y abrir formulario correspondiente
-                        int filasLog = conexion.GrabarIntento(usuario, "Exitoso", cmbPerfil.Text);
-                        if (filasLog <= 0)
-                        {
-                            // no bloqueamos el acceso por fallo de logging, pero informamos en desarrollo
-                            // MessageBox.Show("No se pudo registrar intento exitoso: " + conexion.ObtenerError(), "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        }
-
-                        intentos = 0;
-
-                        // Si el perfil elegido es "RR.HH." abrimos frmRRHH, en caso contrario frmMain
-                        if (string.Equals(cmbPerfil.Text, "RR.HH.", StringComparison.OrdinalIgnoreCase))
-                        {
-                            this.Hide();
-                            var rrhh = new frmRRHH();
-                            rrhh.ShowDialog();
-                            this.Show();
-                            return;
-                        }
-                        else
-                        {
-                            this.Hide();
-                            var main = new frmMain();
-                            main.usuario = usuario;
-                            main.perfil = cmbPerfil.Text; // nombre del perfil mostrado
-                            main.ShowDialog();
-                            this.Show();
-                            return;
-                        }
+                        nombres.Add(row["Nombre"].ToString());
                     }
-                    else
-                    {
-                        // Perfil no asignado -> registrar intento fallido
-                        conexion.GrabarIntento(usuario, "Fallido", "-");
 
-                        MessageBox.Show("El perfil seleccionado no está asignado a este usuario.", "Acceso denegado",
-                                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-                        intentos++;
-                        if (intentos == 3)
-                        {
-                            conexion.Desconectar();
-                            Close();
-                        }
-                        txtUsuario.Focus();
-                        txtUsuario.Clear();
-                        txtContrasena.Clear();
-                        return;
-                    }
+                    perfilDisplay = string.Join(", ", nombres);
                 }
+
+                // Registrar intento exitoso usando los perfiles encontrados (o 'Sin perfil')
+                int filasLog = conexion.GrabarIntento(usuario, "Exitoso", perfilDisplay);
+                if (filasLog <= 0)
+                {
+                    // No bloquear el acceso por fallo de logging
+                }
+
+                intentos = 0;
+
+                // Siempre abrir frmMain independientemente del perfil
+                this.Hide();
+                var main = new frmMain();
+                main.usuario = usuario;
+                main.perfil = perfilDisplay; // nombre(s) de perfiles o 'Sin perfil'
+                main.ShowDialog();
+                this.Show();
+                return;
             }
             catch (OleDbException ex)
             {
@@ -197,6 +158,8 @@ namespace prySilvaERP
 
         private void frmLogin_Load(object sender, EventArgs e)
         {
+            CheckDbStatus();
+
             // Cargar perfiles desde la tabla Perfil y asignar DisplayMember / ValueMember
             string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
                 "|DataDirectory|\\Conexion\\Silva.accdb;Persist Security Info=True";
@@ -221,14 +184,14 @@ namespace prySilvaERP
 
                     if (dt.Rows.Count > 0)
                     {
-                        cmbPerfil.DisplayMember = "Nombre";
+                        /*cmbPerfil.DisplayMember = "Nombre";
                         cmbPerfil.ValueMember = "Id_perfil";
-                        cmbPerfil.DataSource = dt;
+                        cmbPerfil.DataSource = dt;*/
                     }
                     else
                     {
-                        cmbPerfil.DataSource = null;
-                        cmbPerfil.Items.Clear();
+                        /*cmbPerfil.DataSource = null;
+                        cmbPerfil.Items.Clear();*/
                     }
                 }
             }
@@ -244,6 +207,43 @@ namespace prySilvaERP
             {
                 conexion.Desconectar();
             }
+        }
+
+        private void chkMostrar_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkMostrar.Checked)
+            {
+                txtContrasena.UseSystemPasswordChar = false;
+                txtContrasena.Focus();
+            }
+            else
+            {
+                txtContrasena.UseSystemPasswordChar = true;
+                txtContrasena.Focus();
+            }
+        }
+
+        private void CheckDbStatus()
+        {
+            string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" +
+                             "|DataDirectory|\\Conexion\\Silva.accdb;Persist Security Info=True";
+
+            var conexion = new CConexion();
+            bool conectado = conexion.Conectar(connStr);
+
+            if (conectado)
+            {
+                lblEstado.ForeColor = Color.Green;
+                lblEstado.Text = "Conexión establecida correctamente.";
+            }
+            else
+            {
+                lblEstado.ForeColor = Color.Red;
+                string err = conexion.ObtenerError();
+                lblEstado.Text = "Error de conexión: " + (string.IsNullOrWhiteSpace(err) ? "desconocido." : err);
+            }
+
+            conexion.Desconectar();
         }
     }
 }
