@@ -56,7 +56,7 @@ namespace prySilvaERP
             try
             {
                 // 1) Obtener el Id del usuario si las credenciales son correctas
-                string sqlGetUserId = "SELECT Id_usuario FROM Usuario WHERE Mail = ? AND Contraseña = ?";
+                string sqlGetUserId = "SELECT Id_usuario FROM Usuario WHERE Mail = ? AND Contrasena = ?";
                 int idUsuario = 0;
                 using (OleDbCommand cmd = new OleDbCommand(sqlGetUserId, conexion.CNN))
                 {

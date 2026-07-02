@@ -39,7 +39,9 @@
             this.chkMostrar = new System.Windows.Forms.CheckBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblEstado = new System.Windows.Forms.ToolStripStatusLabel();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // lblUsuario
@@ -51,7 +53,6 @@
             this.lblUsuario.Size = new System.Drawing.Size(86, 25);
             this.lblUsuario.TabIndex = 0;
             this.lblUsuario.Text = "Usuario";
-          
             // 
             // lblContrasena
             // 
@@ -62,7 +63,6 @@
             this.lblContrasena.Size = new System.Drawing.Size(123, 25);
             this.lblContrasena.TabIndex = 1;
             this.lblContrasena.Text = "Contraseña";
-         
             // 
             // lblTitulo
             // 
@@ -82,7 +82,6 @@
             this.txtUsuario.Name = "txtUsuario";
             this.txtUsuario.Size = new System.Drawing.Size(138, 31);
             this.txtUsuario.TabIndex = 3;
-           
             // 
             // txtContrasena
             // 
@@ -93,7 +92,6 @@
             this.txtContrasena.Size = new System.Drawing.Size(138, 31);
             this.txtContrasena.TabIndex = 4;
             this.txtContrasena.UseSystemPasswordChar = true;
-           
             // 
             // cmdAceptar
             // 
@@ -113,7 +111,7 @@
             this.cmdCancelar.Name = "cmdCancelar";
             this.cmdCancelar.Size = new System.Drawing.Size(122, 45);
             this.cmdCancelar.TabIndex = 6;
-            this.cmdCancelar.Text = "Cancelar";
+            this.cmdCancelar.Text = "Salir";
             this.cmdCancelar.UseVisualStyleBackColor = true;
             this.cmdCancelar.Click += new System.EventHandler(this.cmdCancelar_Click);
             // 
@@ -145,12 +143,23 @@
             this.lblEstado.Size = new System.Drawing.Size(55, 17);
             this.lblEstado.Text = "lblEstado";
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::prySilvaERP.Properties.Resources.f5d740a1_779e_46cd_b852_3f8aa2fbe56d;
+            this.pictureBox1.Location = new System.Drawing.Point(370, 31);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(62, 65);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 9;
+            this.pictureBox1.TabStop = false;
+            // 
             // frmLogin
             // 
             this.AcceptButton = this.cmdAceptar;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(444, 354);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.chkMostrar);
             this.Controls.Add(this.cmdCancelar);
@@ -169,6 +178,7 @@
             this.Load += new System.EventHandler(this.frmLogin_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -186,5 +196,6 @@
         private System.Windows.Forms.CheckBox chkMostrar;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblEstado;
+        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }

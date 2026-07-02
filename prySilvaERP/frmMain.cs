@@ -16,6 +16,13 @@ namespace prySilvaERP
     {
         private Timer _timerFechaHora;
         private bool _isRRHHUser = false;
+        
+        // Guarda el estado original de cada control: posición, tamaño y tamaño de fuente
+        private Dictionary<Control, Rectangle> tamañosOriginales = new Dictionary<Control, Rectangle>();
+        private Dictionary<Control, float> fuentesOriginales = new Dictionary<Control, float>();
+        private float anchoFormularioOriginal;
+        private float altoFormularioOriginal;
+        private bool cargado = false; // <-- bandera de control
 
         public frmMain()
         {
@@ -65,6 +72,25 @@ namespace prySilvaERP
 
             // Cerrar si quedó abierta
             conexion.Desconectar();
+
+
+            // Acá el formulario todavía tiene el tamaño de diseño (chico)
+            anchoFormularioOriginal = this.ClientSize.Width;
+            altoFormularioOriginal = this.ClientSize.Height;
+
+            tamañosOriginales.Clear();
+            fuentesOriginales.Clear();
+
+            foreach (Control control in this.Controls)
+            {
+                tamañosOriginales[control] = control.Bounds;
+                fuentesOriginales[control] = control.Font.Size;
+            }
+
+            cargado = true;
+
+            // Recién ahora maximizamos, lo cual va a disparar el Resize con los factores correctos
+            this.WindowState = FormWindowState.Maximized;
         }
 
         private void frmMain_Load_1(object sender, EventArgs e)
@@ -96,7 +122,8 @@ namespace prySilvaERP
                 }
             }
 
-            // Si es administrador permitir todo; si es RR.HH solo permitir Sistema + RR.HH; si no, permitir solo Sistema
+            // Si es administrador permitir todo; si es RR.HH mostrar todas las opciones pero controlar acceso al hacer click
+            // si no, permitir solo Sistema
             if (isAdmin)
             {
                 sistemaToolStripMenuItem.Enabled = true;
@@ -107,11 +134,12 @@ namespace prySilvaERP
             }
             else if (_isRRHHUser)
             {
+                // Para usuarios de RR.HH permitimos que hagan click en los items (para mostrar el mensaje de acceso denegado)
                 sistemaToolStripMenuItem.Enabled = true;
-                consultarAuditoriaAdminToolStripMenuItem.Enabled = false;
+                consultarAuditoriaAdminToolStripMenuItem.Enabled = true;
                 rRHHToolStripMenuItem.Enabled = true;
-                finanzasToolStripMenuItem.Enabled = false;
-                usuarioToolStripMenuItem.Enabled = false;
+                finanzasToolStripMenuItem.Enabled = true;
+                usuarioToolStripMenuItem.Enabled = true;
             }
             else
             {
@@ -163,6 +191,14 @@ namespace prySilvaERP
 
         private void consultarAuditoriaAdminToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // Sólo administradores pueden acceder a esta opción.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", System.StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", System.StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. Esta opción solo está disponible para usuarios Administradores.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             frmAuditoria x = new frmAuditoria();
             x.ShowDialog();
         }
@@ -181,6 +217,32 @@ namespace prySilvaERP
             x.ShowDialog();
         }
 
+        private void finanzasToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // En el diseño actual sólo administradores tienen acceso a Finanzas.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. No tiene permisos para acceder a Finanzas.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // TODO: abrir formulario de Finanzas cuando esté disponible
+        }
+
+        private void usuarioToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // En el diseño actual sólo administradores tienen acceso a Usuario.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. No tiene permisos para acceder a Usuario.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // TODO: abrir formulario de Usuario cuando esté disponible
+        }
+
         private void cmdCerrarSesion_Click(object sender, EventArgs e)
         {
             Close();
@@ -188,12 +250,91 @@ namespace prySilvaERP
 
         private void acercaDeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            frmDatosDesarrollador x = new frmDatosDesarrollador();
+            x.ShowDialog();
         }
 
         private void cerrarSesiónToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void frmMain_Resize(object sender, EventArgs e)
+        {
+            if (!cargado) return; // evita que se ejecute antes de tiempo
+            if (this.ClientSize.Width == 0 || this.ClientSize.Height == 0) return;
+
+            float factorX = this.ClientSize.Width / anchoFormularioOriginal;
+            float factorY = this.ClientSize.Height / altoFormularioOriginal;
+
+            foreach (Control control in this.Controls)
+            {
+                if (!tamañosOriginales.TryGetValue(control, out Rectangle original))
+                    continue; // si por algún motivo no está, lo salteamos en vez de explotar
+
+                control.Left = (int)(original.Left * factorX);
+                control.Top = (int)(original.Top * factorY);
+                control.Width = (int)(original.Width * factorX);
+                control.Height = (int)(original.Height * factorY);
+
+                float nuevaFuente = fuentesOriginales[control] * Math.Min(factorX, factorY);
+                if (nuevaFuente > 1)
+                    control.Font = new Font(control.Font.FontFamily, nuevaFuente, control.Font.Style);
+            }
+        }
+
+        private void cmdAuditoria_Click(object sender, EventArgs e)
+        {
+            // Sólo administradores pueden acceder a esta opción.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", System.StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", System.StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. Esta opción solo está disponible para usuarios Administradores.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            frmAuditoria x = new frmAuditoria();
+            x.ShowDialog();
+        }
+
+        private void cmdRRHH_Click(object sender, EventArgs e)
+        {
+            // Permitir acceso solo si el usuario tiene perfil RR.HH. o es administrador.
+            if (!(_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                  (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                MessageBox.Show("Acceso denegado. Esta opción solo está disponible para usuarios con perfil RR.HH.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            frmRRHH x = new frmRRHH();
+            x.ShowDialog();
+        }
+
+        private void cmdFinanzas_Click(object sender, EventArgs e)
+        {
+            // En el diseño actual sólo administradores tienen acceso a Finanzas.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. No tiene permisos para acceder a Finanzas.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // TODO: abrir formulario de Finanzas cuando esté disponible
+        }
+
+        private void cmdUsuario_Click(object sender, EventArgs e)
+        {
+            // En el diseño actual sólo administradores tienen acceso a Usuario.
+            if (_isRRHHUser || (perfil ?? string.Empty).IndexOf("Administrador", StringComparison.OrdinalIgnoreCase) < 0 &&
+                (perfil ?? string.Empty).IndexOf("Admin", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                MessageBox.Show("Acceso denegado. No tiene permisos para acceder a Usuario.", "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // TODO: abrir formulario de Usuario cuando esté disponible
         }
     }
 }

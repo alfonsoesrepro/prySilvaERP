@@ -73,6 +73,16 @@ namespace prySilvaERP.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap _61tOwAlN1iL__AC_SL1497_ {
+            get {
+                object obj = ResourceManager.GetObject("61tOwAlN1iL._AC_SL1497_", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap cal {
             get {
                 object obj = ResourceManager.GetObject("cal", resourceCulture);
@@ -86,6 +96,16 @@ namespace prySilvaERP.Properties {
         internal static System.Drawing.Bitmap Dynamics {
             get {
                 object obj = ResourceManager.GetObject("Dynamics", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap f5d740a1_779e_46cd_b852_3f8aa2fbe56d {
+            get {
+                object obj = ResourceManager.GetObject("f5d740a1-779e-46cd-b852-3f8aa2fbe56d", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
